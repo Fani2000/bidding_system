@@ -39,8 +39,8 @@ Thumbs.db
 packages/
 *.lock.json
 
-## Entity Framework
-Migrations/
+# ## Entity Framework
+# Migrations/
 
 ## Resharper
 _ReSharper*/
