@@ -25,4 +25,14 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 
+try
+{
+    DbInitializer.InitDb(app);
+}
+catch (System.Exception e)
+{
+    Console.WriteLine(e);
+    throw;
+}
+
 app.Run();
