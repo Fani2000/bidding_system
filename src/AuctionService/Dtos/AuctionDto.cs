@@ -1,4 +1,5 @@
-namespace Auction.Dtos;
+namespace AuctionService.Dtos;
+
 public class AuctionDto
 {
     public Guid Id { get; set; }
