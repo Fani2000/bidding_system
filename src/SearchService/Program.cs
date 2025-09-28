@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 builder.Services.AddControllers();
+builder.Services.AddHttpClient<AuctionSvcHttpClient>();
 
 var app = builder.Build();
 
