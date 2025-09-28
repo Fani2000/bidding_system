@@ -10,7 +10,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: mongopw
