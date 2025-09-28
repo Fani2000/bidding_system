@@ -1,17 +1,17 @@
-using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using MongoDB.Entities;
+using Polly;
+using Polly.Extensions.Http;
 using SearchService.Data;
 using SearchService.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 builder.Services.AddControllers();
-builder.Services.AddHttpClient<AuctionSvcHttpClient>();
+builder.Services.AddHttpClient<AuctionSvcHttpClient>().AddPolicyHandler(GetPolicy());
 
 var app = builder.Build();
 
@@ -35,17 +35,26 @@ await DB.Index<Item>()
     .Key(x => x.Color, KeyType.Text)
     .CreateAsync();
 
-try
-{
-    DbInitialiser.InitDb(app);
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"An error occurred while initializing the database: {ex.Message}");
-}
-
 app.UseHttpsRedirection();
 
 app.MapControllers();
 
+app.Lifetime.ApplicationStarted.Register(async () =>
+{
+    try
+    {
+        DbInitialiser.InitDb(app);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while initializing the database: {ex.Message}");
+    }
+});
+
 app.Run();
+
+static IAsyncPolicy<HttpResponseMessage> GetPolicy() =>
+    HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));

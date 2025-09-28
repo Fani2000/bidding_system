@@ -8,10 +8,10 @@ public class AuctionSvcHttpClient(HttpClient httpClient, IConfiguration configur
 
     public async Task<List<Item>> GetItemsForSearchDb()
     {
-        var lastUpdated = await DB.Find<Item, string>()
-            .Sort(i => i.UpdatedAt, Order.Descending)
-            .Project(i => i.UpdatedAt.ToString("o"))
-            .ExecuteAnyAsync();
+        var lastUpdated = await DB.Find<Item, DateTime>()
+            .Sort(x => x.UpdatedAt, Order.Descending)
+            .Project(x => x.UpdatedAt)
+            .ExecuteFirstAsync();
 
         string queryParam = lastUpdated != default ? lastUpdated.ToString() : string.Empty;
 
@@ -23,6 +23,8 @@ public class AuctionSvcHttpClient(HttpClient httpClient, IConfiguration configur
         }
 
         var items = await _httpClient.GetFromJsonAsync<List<Item>>(url);
+
+        Console.WriteLine($"Retrieved {items?.Count ?? 0} items from Auction Service.");
 
         return items ?? new List<Item>();
     }
