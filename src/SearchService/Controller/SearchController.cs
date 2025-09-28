@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Entities;
 using SearchService.Entities;
+using SearchService.RequestHelpers;
 
 namespace SearchService.Controllers;
 
@@ -17,22 +18,55 @@ public class SearchController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> SearchItems(
-        string? searchTerm,
-        int pageNumber = 1,
-        int pageSize = 4
-    )
+    public async Task<IActionResult> SearchItems([FromQuery] SearchParams searchParams)
     {
+        var searchTerm = searchParams.SearchTerm;
+        var pageNumber = searchParams.PageNumber;
+        var pageSize = searchParams.PageSize;
+
         _logger.LogInformation("Search query received: {Query}", searchTerm);
 
+        // Start a paged search on the Item collection
         var query = DB.PagedSearch<Item>();
 
+        // Full-text search if a term was provided
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            query.Match(Search.Full, searchTerm).SortByTextScore();
+            query.Match(Search.Full, searchTerm).SortByTextScore(); // text score sorting only if full-text search used
         }
 
-        query.Sort(b => b.CreatedAt, Order.Ascending).PageNumber(pageNumber).PageSize(pageSize);
+        // Filtering by auction status
+        switch (searchParams.FilterBy?.ToLowerInvariant())
+        {
+            case "finished":
+                query.Match(i => i.AuctionEnd < DateTime.UtcNow);
+                break;
+            case "endingsoon":
+                query.Match(i =>
+                    i.AuctionEnd < DateTime.UtcNow.AddHours(6) && i.AuctionEnd > DateTime.UtcNow
+                );
+                break;
+            default:
+                query.Match(i => i.AuctionEnd > DateTime.UtcNow);
+                break;
+        }
+
+        // Sorting
+        switch (searchParams.OrderBy?.ToLowerInvariant())
+        {
+            case "make":
+                query.Sort(i => i.Make, Order.Ascending);
+                break;
+            case "new":
+                query.Sort(i => i.CreatedAt, Order.Descending); // newest first
+                break;
+            default:
+                query.Sort(i => i.AuctionEnd, Order.Ascending);
+                break;
+        }
+
+        // Paging
+        query.PageNumber(pageNumber).PageSize(pageSize);
 
         var result = await query.ExecuteAsync();
 
@@ -40,8 +74,8 @@ public class SearchController : ControllerBase
             new
             {
                 Items = result.Results,
-                pageCount = result.PageCount,
-                totalCount = result.TotalCount
+                result.PageCount,
+                result.TotalCount
             }
         );
     }
