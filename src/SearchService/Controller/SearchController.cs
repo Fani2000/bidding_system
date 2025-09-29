@@ -20,9 +20,9 @@ public class SearchController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> SearchItems([FromQuery] SearchParams searchParams)
     {
-        var searchTerm = searchParams.SearchTerm;
-        var pageNumber = searchParams.PageNumber;
-        var pageSize = searchParams.PageSize;
+        var searchTerm = searchParams.searchTerm;
+        var pageNumber = searchParams.pageNumber;
+        var pageSize = searchParams.pageSize;
 
         _logger.LogInformation("Search query received: {Query}", searchTerm);
 
@@ -36,7 +36,7 @@ public class SearchController : ControllerBase
         }
 
         // Filtering by auction status
-        switch (searchParams.FilterBy?.ToLowerInvariant())
+        switch (searchParams.filterBy?.ToLowerInvariant())
         {
             case "finished":
                 query.Match(i => i.AuctionEnd < DateTime.UtcNow);
@@ -52,7 +52,7 @@ public class SearchController : ControllerBase
         }
 
         // Sorting
-        switch (searchParams.OrderBy?.ToLowerInvariant())
+        switch (searchParams.orderBy?.ToLowerInvariant())
         {
             case "make":
                 query.Sort(i => i.Make, Order.Ascending);

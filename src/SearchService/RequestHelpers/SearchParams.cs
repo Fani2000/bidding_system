@@ -2,11 +2,11 @@ namespace SearchService.RequestHelpers;
 
 public class SearchParams
 {
-    public string SearchTerm { get; set; } = string.Empty;
-    public int PageNumber { get; set; } = 1;
-    public int PageSize { get; set; } = 4;
-    public string Seller { get; set; } = string.Empty;
-    public string Winner { get; set; } = string.Empty;
-    public string OrderBy { get; set; } = string.Empty;
-    public string FilterBy { get; set; } = string.Empty;
+    public string? searchTerm { get; set; } = string.Empty;
+    public int pageNumber { get; set; } = 1;
+    public int pageSize { get; set; } = 4;
+    public string? seller { get; set; } = string.Empty;
+    public string? winner { get; set; } = string.Empty;
+    public string? orderBy { get; set; } = string.Empty;
+    public string? filterBy { get; set; } = string.Empty;
 }

@@ -2,6 +2,8 @@ using AuctionService.Data;
 using AuctionService.Dtos;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Contracts.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,12 +14,14 @@ namespace AuctionService.Controllers;
 public class AuctionsController(
     ILogger<AuctionsController> logger,
     AuctionDbContext context,
-    IMapper mapper
+    IMapper mapper,
+    IPublishEndpoint publishEndpoint
 ) : ControllerBase
 {
     private readonly ILogger<AuctionsController> _logger = logger;
     private readonly AuctionDbContext _context = context;
     private readonly IMapper _mapper = mapper;
+    private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AuctionDto>>> GetAuctions(string? date)
@@ -60,7 +64,9 @@ public class AuctionsController(
         auction.CreatedAt = DateTime.UtcNow;
 
         _context.Auctions.Add(auction);
+
         var result = await _context.SaveChangesAsync() > 0;
+
         if (!result)
         {
             _logger.LogError("Problem saving new auction to database");
@@ -69,7 +75,15 @@ public class AuctionsController(
 
         var auctionDto = _mapper.Map<AuctionDto>(auction);
 
-        return CreatedAtAction(nameof(GetAuctionById), new { id = auction.Id }, auctionDto);
+        var auctionCreatedEvent = _mapper.Map<AuctionCreated>(auction);
+
+        await _publishEndpoint.Publish(auctionCreatedEvent);
+
+        return CreatedAtAction(
+            nameof(GetAuctionById),
+            new { id = auction.Id },
+            auctionCreatedEvent
+        );
     }
 
     [HttpPut("{id}")]

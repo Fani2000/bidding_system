@@ -1,4 +1,4 @@
-namespace AuctionService.Events;
+namespace Contracts.Events;
 
 public class AuctionCreated
 {
@@ -18,29 +18,4 @@ public class AuctionCreated
     public int ReservePrice { get; set; }
     public int? SoldAmount { get; set; }
     public int? CurrentHighBid { get; set; }
-}
-
-public class AuctionUpdated
-{
-    public string Id { get; set; } = string.Empty;
-    public string Make { get; set; } = string.Empty;
-    public string Model { get; set; } = string.Empty;
-    public string Color { get; set; } = string.Empty;
-    public int Mileage { get; set; }
-    public int Year { get; set; }
-}
-
-public class AuctionDeleted
-{
-    public string Id { get; set; } = string.Empty;
-}
-
-public class BidPlaced
-{
-    public string Id { get; set; } = string.Empty;
-    public string Make { get; set; } = string.Empty;
-    public string Model { get; set; } = string.Empty;
-    public string Color { get; set; } = string.Empty;
-    public int Mileage { get; set; }
-    public int Year { get; set; }
 }
