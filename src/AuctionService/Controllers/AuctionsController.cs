@@ -63,6 +63,12 @@ public class AuctionsController(
         auction.Id = Guid.NewGuid();
         auction.CreatedAt = DateTime.UtcNow;
 
+        var auctionDto = _mapper.Map<AuctionDto>(auction);
+
+        var auctionCreatedEvent = _mapper.Map<AuctionCreated>(auction);
+
+        await _publishEndpoint.Publish(auctionCreatedEvent);
+
         _context.Auctions.Add(auction);
 
         var result = await _context.SaveChangesAsync() > 0;
@@ -72,12 +78,6 @@ public class AuctionsController(
             _logger.LogError("Problem saving new auction to database");
             return StatusCode(500, "A problem happened while handling your request.");
         }
-
-        var auctionDto = _mapper.Map<AuctionDto>(auction);
-
-        var auctionCreatedEvent = _mapper.Map<AuctionCreated>(auction);
-
-        await _publishEndpoint.Publish(auctionCreatedEvent);
 
         return CreatedAtAction(
             nameof(GetAuctionById),
@@ -105,6 +105,8 @@ public class AuctionsController(
         auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
         auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
 
+        await _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auction));
+
         var result = await _context.SaveChangesAsync() > 0;
 
         if (!result)
@@ -125,6 +127,8 @@ public class AuctionsController(
 
         if (auction == null)
             return NotFound();
+
+        await _publishEndpoint.Publish(new AuctionDeleted { Id = id.ToString() });
 
         _context.Auctions.Remove(auction);
         await _context.SaveChangesAsync();

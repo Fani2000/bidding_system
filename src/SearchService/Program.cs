@@ -17,10 +17,22 @@ builder.Services.AddHttpClient<AuctionSvcHttpClient>().AddPolicyHandler(GetPolic
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<AuctionCreatedConsumer>();
+    x.AddConsumer<AuctionDeletedConsumer>();
+    x.AddConsumer<AuctionUpdateConsumer>();
+
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
     x.UsingRabbitMq(
         (context, cfg) =>
         {
+            cfg.ReceiveEndpoint(
+                "search-auction-created",
+                e =>
+                {
+                    e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
+                    e.ConfigureConsumer<AuctionCreatedConsumer>(context);
+                }
+            );
+
             // cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
             cfg.ConfigureEndpoints(context);
         }
