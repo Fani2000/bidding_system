@@ -21,6 +21,18 @@ public static class Config
                 RedirectUris = { "https://oauth.pstmn.io/v1/callback" },
                 ClientSecrets = new[] { new Secret("NotASecret".Sha256()) },
                 AllowedGrantTypes = { GrantType.ResourceOwnerPassword }
-            }
+            },
+            new Client
+            {
+                ClientId = "nextApp",
+                ClientName = "nextApp",
+                AllowedScopes = { "auctionApp", "openid", "profile" },
+                RedirectUris = { "http://localhost:3000/api/auth/callback/id-server" },
+                RequirePkce = false,
+                AllowOfflineAccess = true,
+                AccessTokenLifetime = 3600 * 24 * 30, // 30 days
+                ClientSecrets = new[] { new Secret("secrets".Sha256()) },
+                AllowedGrantTypes = { GrantType.ClientCredentials },
+            },
         };
 }
