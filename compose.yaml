@@ -81,7 +81,7 @@ services:
     ports:
       - "6001:80"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
       - IdentityServiceUrl=http://identiy-svc
     depends_on:
