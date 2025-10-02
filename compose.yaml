@@ -25,7 +25,68 @@ services:
       - "5672:5672"
       - "15672:15672"
     
+  auction-svc:
+    image: auction-svc:latest
+    build:
+      context: .
+      dockerfile: src/AuctionService/Dockerfile
+    ports:
+      - "7001:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=server=postgres;port=5432;database=Auctions;user id=postgres;password=postgres;
+      - RabbitMq__Host=rabbitmq
+      - IdentityServiceUrl=http://identiy-svc
+    depends_on:
+      - postgres
+      - rabbitmq
 
+  search-svc:
+    image: search-svc:latest
+    build:
+      context: .
+      dockerfile: src/SearchService/Dockerfile
+    ports:
+      - "7002:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__MongoDbConnection=mongodb://root:mongopw@mongodb:27017
+      - RabbitMq__Host=rabbitmq
+      - IdentityServiceUrl=http://identiy-svc
+      - AuctionServiceUrl=http://auction-svc
+    depends_on:
+      - postgres
+      - rabbitmq
+  identiy-svc:
+    image: identity-svc:latest
+    build:
+      context: . 
+      dockerfile: src/IdentityService/Dockerfile
+    ports:
+      - "5001:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=server=postgres;port=5432;database=IdentityDb;user id=postgres;password=postgres;
+    depends_on:
+      - postgres
+
+  gateway-svc:
+    image: gateway-svc:latest
+    build:
+      context: .
+      dockerfile: src/GatewayService/Dockerfile
+    ports:
+      - "6001:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    depends_on:
+      - identiy-svc
+      - auction-svc
+      - search-svc  
 
 volumes:
   pgdata:
