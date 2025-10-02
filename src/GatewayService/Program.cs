@@ -20,7 +20,23 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("customPolicy", policy => policy.RequireAuthenticatedUser());
 });
 
+builder.Services.AddCors(opts =>
+{
+    opts.AddPolicy(
+        "customPolicy",
+        b =>
+        {
+            b.AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                .WithOrigins(builder.Configuration["ClientApp"]);
+        }
+    );
+});
+
 var app = builder.Build();
+
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
