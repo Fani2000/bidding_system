@@ -24,10 +24,10 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    
+
   auction-svc:
     image: auction-svc:latest
-    build: 
+    build:
       context: .
       dockerfile: src/AuctionService/Dockerfile
     environment:
@@ -68,7 +68,7 @@ services:
   identiy-svc:
     image: identity-svc:latest
     build:
-      context: . 
+      context: .
       dockerfile: src/IdentityService/Dockerfile
     ports:
       - "5001:80"
@@ -94,7 +94,7 @@ services:
     depends_on:
       - identiy-svc
       - auction-svc
-      - search-svc  
+      - search-svc
 
   bid-svc:
     image: bid-svc:latest
@@ -117,7 +117,7 @@ services:
 
   notify-svc:
     image: notify-svc:latest
-    build: 
+    build:
       context: .
       dockerfile: src/NotificationService/Dockerfile
     ports:
@@ -125,6 +125,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      - rabbitmq
 
 volumes:
   pgdata:
