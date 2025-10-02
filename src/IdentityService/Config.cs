@@ -28,7 +28,6 @@ public static class Config
                 ClientName = "nextApp",
                 AllowedScopes = { "auctionApp", "openid", "profile" },
                 RedirectUris = { "http://localhost:3000/api/auth/callback/id-server" },
-                RequirePkce = false,
                 AllowOfflineAccess = true,
                 AccessTokenLifetime = 3600 * 24 * 30, // 30 days
                 ClientSecrets = new[] { new Secret("secrets".Sha256()) },
