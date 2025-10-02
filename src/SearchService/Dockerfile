@@ -6,11 +6,14 @@ COPY bidding_system.sln ./
 
 COPY src/SearchService/SearchService.csproj ./src/SearchService/
 COPY src/Contracts/Contracts.csproj ./src/Contracts/
+COPY src/BiddingService/BiddingService.csproj ./src/BiddingService/
 
 RUN dotnet restore ./src/SearchService/SearchService.csproj
 
 COPY src/SearchService/. ./src/SearchService/
 COPY src/Contracts/. ./src/Contracts/
+COPY src/BiddingService/. ./src/BiddingService/
+
 
 RUN dotnet publish ./src/SearchService/SearchService.csproj -c Release -o /app/publish
 

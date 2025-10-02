@@ -26,7 +26,9 @@ builder.Services.AddMassTransit(x =>
         o.UseBusOutbox();
     });
 
-    x.AddConsumer<AuctionCreatedFaultConsumer>();
+    x.AddConsumersFromNamespaceContaining<AuctionCreatedFaultConsumer>();
+    // x.AddConsumersFromNamespaceContaining<BidPlacedConsumer>();
+    // x.AddConsumersFromNamespaceContaining<AuctionFinishedConsumer>();
 
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("auction", false));
 
@@ -57,6 +59,8 @@ builder
         options.TokenValidationParameters.ValidateAudience = false;
         options.TokenValidationParameters.NameClaimType = "username";
     });
+
+builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
 
 var app = builder.Build();
 

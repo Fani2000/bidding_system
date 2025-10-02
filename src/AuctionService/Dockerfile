@@ -5,12 +5,14 @@ WORKDIR /app
 COPY bidding_system.sln ./
 
 COPY src/AuctionService/AuctionService.csproj ./src/AuctionService/
+COPY src/BiddingService/BiddingService.csproj ./src/BiddingService/
 COPY src/Contracts/Contracts.csproj ./src/Contracts/
 
 RUN dotnet restore ./src/AuctionService/AuctionService.csproj
 
 COPY src/AuctionService/. ./src/AuctionService/
 COPY src/Contracts/. ./src/Contracts/
+COPY src/BiddingService/. ./src/BiddingService/
 
 RUN dotnet publish ./src/AuctionService/AuctionService.csproj -c Release -o /app/publish
 

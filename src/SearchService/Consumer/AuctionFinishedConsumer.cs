@@ -3,6 +3,8 @@ using MassTransit;
 using MongoDB.Entities;
 using SearchService.Entities;
 
+namespace SearchService.Consumer;
+
 public class AuctionFinishedConsumer : IConsumer<AuctionFinished>
 {
     private readonly ILogger<AuctionFinishedConsumer> _logger;

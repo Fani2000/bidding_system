@@ -1,107 +1,66 @@
 using AuctionService.Data;
 using AuctionService.Dtos;
+using AuctionService.Entities;
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Contracts.Events;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace AuctionService.Controllers;
 
 [ApiController]
-[Route("api/auctions")]
+[Route("api/[controller]")]
 public class AuctionsController(
-    ILogger<AuctionsController> logger,
-    AuctionDbContext context,
+    IAuctionRepository repo,
     IMapper mapper,
     IPublishEndpoint publishEndpoint
 ) : ControllerBase
 {
-    private readonly ILogger<AuctionsController> _logger = logger;
-    private readonly AuctionDbContext _context = context;
-    private readonly IMapper _mapper = mapper;
-    private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
-
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<AuctionDto>>> GetAuctions(string? date)
+    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions(string? date)
     {
-        var query = _context.Auctions.OrderBy(x => x.Item.Make).AsQueryable();
-
-        if (!string.IsNullOrEmpty(date))
-        {
-            if (DateTime.TryParse(date, out var parsedDate))
-            {
-                query = query.Where(a => a.UpdatedAt.CompareTo(parsedDate.ToUniversalTime()) > 0);
-            }
-            else
-            {
-                return BadRequest("Invalid date format. Please use a valid date.");
-            }
-        }
-
-        return Ok(await query.ProjectTo<AuctionDto>(_mapper.ConfigurationProvider).ToListAsync());
+        return await repo.GetAuctionsAsync(date);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<AuctionDto>> GetAuctionById(Guid id)
     {
-        var auction = await _context
-            .Auctions.Include(a => a.Item)
-            .FirstOrDefaultAsync(a => a.Id == id);
+        var auction = await repo.GetAuctionByIdAsync(id);
 
         if (auction == null)
             return NotFound();
 
-        return Ok(_mapper.Map<AuctionDto>(auction));
+        return auction;
     }
 
     [Authorize]
     [HttpPost]
     public async Task<ActionResult<AuctionDto>> CreateAuction(CreateAuctionDto createAuctionDto)
     {
-        var auction = _mapper.Map<Entities.Auction>(createAuctionDto);
+        var auction = mapper.Map<Auction>(createAuctionDto);
 
-        auction.Seller = User.Identity?.Name!;
+        auction.Seller = User.Identity?.Name ?? "Unknown user";
 
-        auction.Id = Guid.NewGuid();
+        repo.AddAuction(auction);
 
-        auction.CreatedAt = DateTime.UtcNow;
+        var newAuction = mapper.Map<AuctionDto>(auction);
 
-        var auctionDto = _mapper.Map<AuctionDto>(auction);
+        await publishEndpoint.Publish(mapper.Map<AuctionCreated>(newAuction));
 
-        var auctionCreatedEvent = _mapper.Map<AuctionCreated>(auction);
-
-        await _publishEndpoint.Publish(auctionCreatedEvent);
-
-        _context.Auctions.Add(auction);
-
-        var result = await _context.SaveChangesAsync() > 0;
+        var result = await repo.SaveChangesAsync();
 
         if (!result)
-        {
-            _logger.LogError("Problem saving new auction to database");
-            return StatusCode(500, "A problem happened while handling your request.");
-        }
+            return BadRequest("Could not save changes to DB");
 
-        return CreatedAtAction(
-            nameof(GetAuctionById),
-            new { id = auction.Id },
-            auctionCreatedEvent
-        );
+        return CreatedAtAction(nameof(GetAuctionById), new { Id = auction.Id }, newAuction);
     }
 
     [Authorize]
-    [HttpPut("{id}")]
-    public async Task<ActionResult<AuctionDto>> UpdateAuction(
-        Guid id,
-        UpdateAuctionDto updateAuctionDto
-    )
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult> UpdateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
     {
-        var auction = await _context
-            .Auctions.Include(a => a.Item)
-            .FirstOrDefaultAsync(a => a.Id == id);
+        var auction = await repo.GetAuctionEntityById(id);
 
         if (auction == null)
             return NotFound();
@@ -115,26 +74,21 @@ public class AuctionsController(
         auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
         auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
 
-        await _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auction));
+        await publishEndpoint.Publish(mapper.Map<AuctionUpdated>(auction));
 
-        var result = await _context.SaveChangesAsync() > 0;
+        var result = await repo.SaveChangesAsync();
 
-        if (!result)
-        {
-            _logger.LogError("Problem updating auction in database");
-            return StatusCode(500, "A problem happened while handling your request.");
-        }
+        if (result)
+            return Ok();
 
-        var auctionDto = _mapper.Map<AuctionDto>(auction);
-
-        return Ok(auctionDto);
+        return BadRequest("Problem saving changes");
     }
 
     [Authorize]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteAuction(Guid id)
+    public async Task<ActionResult> DeleteAuction(Guid id)
     {
-        var auction = await _context.Auctions.FindAsync(id);
+        var auction = await repo.GetAuctionEntityById(id);
 
         if (auction == null)
             return NotFound();
@@ -142,11 +96,15 @@ public class AuctionsController(
         if (auction.Seller != User.Identity?.Name)
             return Forbid();
 
-        await _publishEndpoint.Publish(new AuctionDeleted { Id = id.ToString() });
+        repo.RemoveAuction(auction);
 
-        _context.Auctions.Remove(auction);
-        await _context.SaveChangesAsync();
+        await publishEndpoint.Publish<AuctionDeleted>(new { Id = auction.Id.ToString() });
 
-        return NoContent();
+        var result = await repo.SaveChangesAsync();
+
+        if (!result)
+            return BadRequest("Could not update DB");
+
+        return Ok();
     }
 }

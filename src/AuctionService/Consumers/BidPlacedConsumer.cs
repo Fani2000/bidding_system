@@ -1,56 +1,29 @@
-
 using AuctionService.Data;
+using BiddingSystem.Contracts.Events;
 using Contracts.Events;
 using MassTransit;
 
-public class BidPlacedConsumer : IConsumer<BidPlaced>
+namespace AuctionService.Consumers;
+
+public class BidPlacedConsumer(AuctionDbContext dbContext) : IConsumer<BidPlaced>
 {
-    private readonly AuctionDbContext _context;
-    private readonly ILogger<BidPlacedConsumer> _logger;
-
-    public BidPlacedConsumer(
-        AuctionDbContext context,
-        ILogger<BidPlacedConsumer> logger
-    )
-    {
-        _context = context;
-        _logger = logger;
-    }
-
     public async Task Consume(ConsumeContext<BidPlaced> context)
     {
-        var message = context.Message;
+        Console.WriteLine("--> Consuming bid placed");
 
-        var auction = await _context.Auctions.FindAsync(message.AuctionId);
+        var auction =
+            await dbContext.Auctions.FindAsync(Guid.Parse(context.Message.AuctionId))
+            ?? throw new MessageException(typeof(AuctionFinished), "Cannot retrieve this auction");
 
-        if (auction == null)
+        if (
+            auction.CurrentHighBid == null
+            || context.Message.BidStatus.Contains("Accepted")
+                && context.Message.Amount > auction.CurrentHighBid
+        )
         {
-            _logger.LogWarning("Auction with ID {AuctionId} not found.", message.AuctionId);
-            return;
+            auction.CurrentHighBid = context.Message.Amount;
         }
 
-        if (message.Amount > auction.CurrentHighBid)
-        {
-            auction.CurrentHighBid = message.Amount;
-            auction.Winner = message.Bidder;
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation(
-                "Auction with ID {AuctionId} has a new highest bid of {Amount} by bidder {Bidder}.",
-                message.AuctionId,
-                message.Amount,
-                message.Bidder
-            );
-        }
-        else
-        {
-            _logger.LogInformation(
-                "Received bid of {Amount} for auction ID {AuctionId} is lower than the current highest bid of {HighestBid}.",
-                message.Amount,
-                message.AuctionId,
-                auction.CurrentHighBid
-            );
-        }
+        await dbContext.SaveChangesAsync();
     }
 }

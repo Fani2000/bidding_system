@@ -16,9 +16,9 @@ builder.Services.AddControllers();
 builder.Services.AddHttpClient<AuctionSvcHttpClient>().AddPolicyHandler(GetPolicy());
 builder.Services.AddMassTransit(x =>
 {
-    x.AddConsumer<AuctionCreatedConsumer>();
-    x.AddConsumer<AuctionDeletedConsumer>();
-    x.AddConsumer<AuctionUpdateConsumer>();
+    x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
+    // x.AddConsumer<AuctionDeletedConsumer>();
+    // x.AddConsumer<AuctionUpdateConsumer>();
 
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
     x.UsingRabbitMq(

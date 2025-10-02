@@ -5,10 +5,12 @@ WORKDIR /app
 COPY bidding_system.sln ./
 
 COPY src/GatewayService/GatewayService.csproj ./src/GatewayService/
+COPY src/BiddingService/BiddingService.csproj ./src/BiddingService/
 
 RUN dotnet restore ./src/GatewayService/GatewayService.csproj
 
 COPY src/GatewayService/. ./src/GatewayService/
+COPY src/BiddingService/. ./src/BiddingService/
 
 RUN dotnet publish ./src/GatewayService/GatewayService.csproj -c Release -o /app/publish
 

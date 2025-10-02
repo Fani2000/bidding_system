@@ -1,4 +1,7 @@
+using AutoMapper;
 using BiddingService.Models;
+using Contracts.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Entities;
@@ -9,18 +12,27 @@ public record BidInputModel(string AuctionId, int Amount);
 [Route("api/[controller]")]
 public class BidsController : ControllerBase
 {
+    private readonly IMapper _mapper;
+    private readonly IPublishEndpoint _publisher;
+
+    public BidsController(IMapper mapper, IPublishEndpoint publisher)
+    {
+        _mapper = mapper;
+        _publisher = publisher;
+    }
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> PlaceBid([FromQuery] BidInputModel model)
     {
-        var (acutionId, amount) = model;
+        var (auctionId, amount) = model;
 
         if (amount <= 0)
         {
             return BadRequest("Bid amount must be greater than zero");
         }
 
-        var auction = await DB.Find<Auction>().OneAsync(acutionId);
+        var auction = await DB.Find<Auction>().OneAsync(auctionId);
 
         if (auction == null)
         {
@@ -34,10 +46,9 @@ public class BidsController : ControllerBase
 
         var bid = new Bid
         {
-            AuctionId = acutionId,
+            AuctionId = auctionId,
             Amount = amount,
             Bidder = User.Identity.Name,
-            BidTime = DateTime.UtcNow
         };
 
         if (auction.AuctionEnd < DateTime.UtcNow)
@@ -47,7 +58,7 @@ public class BidsController : ControllerBase
         else
         {
             var highBid = await DB.Find<Bid>()
-                .Match(b => b.AuctionId == acutionId)
+                .Match(b => b.AuctionId == auctionId)
                 .Sort(b => b.Descending(b => b.Amount))
                 .ExecuteFirstAsync();
 
@@ -67,17 +78,21 @@ public class BidsController : ControllerBase
 
         await bid.SaveAsync();
 
-        return Ok(bid);
+        await _publisher.Publish(_mapper.Map<BidPlaced>(bid));
+
+        return Ok(_mapper.Map<BidDto>(bid));
     }
 
     [HttpGet("{auctionId}")]
-    public async Task<IActionResult> GetBidsForAuction(string auctionId)
+    public async Task<ActionResult<List<BidDto>>> GetBidsForAuction(string auctionId)
     {
         var bids = await DB.Find<Bid>()
             .Match(b => b.AuctionId == auctionId)
             .Sort(b => b.Descending(b => b.BidTime))
             .ExecuteAsync();
 
-        return Ok(bids);
+        var results = bids.Select(b => _mapper.Map<BidDto>(b)).ToList();
+
+        return Ok(results);
     }
 }

@@ -5,10 +5,12 @@ WORKDIR /app
 COPY bidding_system.sln ./
 
 COPY src/IdentityService/IdentityService.csproj ./src/IdentityService/
+COPY src/BiddingService/BiddingService.csproj ./src/BiddingService/
 
 RUN dotnet restore ./src/IdentityService/IdentityService.csproj
 
 COPY src/IdentityService/. ./src/IdentityService/
+COPY src/BiddingService/. ./src/BiddingService/
 
 RUN dotnet publish ./src/IdentityService/IdentityService.csproj -c Release -o /app/publish
 

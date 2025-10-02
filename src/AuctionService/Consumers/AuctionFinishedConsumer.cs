@@ -3,40 +3,27 @@ using AuctionService.Entities;
 using BiddingSystem.Contracts.Events;
 using MassTransit;
 
-public class AuctionFinishedConsumer : IConsumer<AuctionFinished>
+namespace AuctionService.Consumers;
+
+public class AuctionFinishedConsumer(AuctionDbContext dbContext) : IConsumer<AuctionFinished>
 {
-    private readonly AuctionDbContext _context;
-    private readonly ILogger<AuctionFinishedConsumer> _logger;
-
-    public AuctionFinishedConsumer(
-        AuctionDbContext context,
-        ILogger<AuctionFinishedConsumer> logger
-    )
-    {
-        _context = context;
-        _logger = logger;
-    }
-
     public async Task Consume(ConsumeContext<AuctionFinished> context)
     {
-        var message = context.Message;
+        Console.WriteLine("--> Consuming auction finished");
 
-        var auction = await _context.Auctions.FindAsync(message.AuctionId);
+        var auction =
+            await dbContext.Auctions.FindAsync(Guid.Parse(context.Message.AuctionId))
+            ?? throw new MessageException(typeof(AuctionFinished), "Cannot retrieve this auction");
 
         if (context.Message.ItemSold)
         {
-            auction.Winner = message.Winner;
-            auction.SoldAmount = message.Amount;
+            auction.Winner = context.Message.Winner;
+            auction.SoldAmount = context.Message.Amount;
         }
 
         auction.Status =
             auction.SoldAmount > auction.ReservePrice ? Status.Finished : Status.ReserveNotMet;
 
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Auction with ID {AuctionId} has been marked as finished.",
-            message.AuctionId
-        );
+        await dbContext.SaveChangesAsync();
     }
 }

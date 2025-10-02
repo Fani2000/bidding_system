@@ -3,6 +3,8 @@ using MassTransit;
 using MongoDB.Entities;
 using SearchService.Entities;
 
+namespace SearchService.Consumer;
+
 public class BidPlacedConsumer : IConsumer<BidPlaced>
 {
     private readonly ILogger<BidPlacedConsumer> _logger;

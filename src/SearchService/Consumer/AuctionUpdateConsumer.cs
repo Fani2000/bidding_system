@@ -4,6 +4,8 @@ using MassTransit;
 using MongoDB.Entities;
 using SearchService.Entities;
 
+namespace SearchService.Consumer;
+
 public class AuctionUpdateConsumer : IConsumer<AuctionUpdated>
 {
     private readonly ILogger<AuctionUpdateConsumer> _logger;
