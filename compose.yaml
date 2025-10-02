@@ -67,7 +67,7 @@ services:
     ports:
       - "5001:80"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__DefaultConnection=server=postgres;port=5432;database=IdentityDb;user id=postgres;password=postgres;
     depends_on:
@@ -83,6 +83,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+      - IdentityServiceUrl=http://identiy-svc
     depends_on:
       - identiy-svc
       - auction-svc
