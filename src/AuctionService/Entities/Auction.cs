@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AuctionService.Entities;
 
-[Table("Auctions")]
 public class Auction
 {
     public Guid Id { get; set; } = Guid.NewGuid();

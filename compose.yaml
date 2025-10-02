@@ -27,22 +27,23 @@ services:
     
   auction-svc:
     image: auction-svc:latest
-    build:
+    build: 
       context: .
       dockerfile: src/AuctionService/Dockerfile
-    ports:
-      - "7001:80"
-      - "7777:7777"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=server=postgres;port=5432;database=Auctions;user id=postgres;password=postgres;
-      - RabbitMq__Host=rabbitmq
-      - IdentityServiceUrl=http://identiy-svc
-      - Kestrel_Endpoints_Grpc_Protocols=Http2
-      - Kestrel_Endpoints_Grpc_Url=http://+7777
-      - Kestrel_Endpoints_WebApi_Protocols=Http1
-      - Kestrel_Endpoints_WebApi_Url=http://+80
+      - ASPNETCORE_URLS=http://+:7777
+      - RabbitMQ__Host=rabbitmq
+      - ConnectionStrings__DefaultConnection=Server=postgres;User Id=postgres;Password=postgres;Database=auctions
+      - IdentityServiceUrl=http://identity-svc
+      - Kestrel__Endpoints__Grpc__Protocols=Http2
+      - Kestrel__Endpoints__Grpc__Url=http://+:7777
+      - Kestrel__Endpoints__WebApi__Protocols=Http1
+      - Kestrel__Endpoints__WebApi__Url=http://+:80
+    ports:
+      - 7001:80
+      - 7777:7777
     depends_on:
       - postgres
       - rabbitmq
@@ -74,6 +75,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
+      - IssuerUri=http://+:5001
       - ConnectionStrings__DefaultConnection=server=postgres;port=5432;database=IdentityDb;user id=postgres;password=postgres;
     depends_on:
       - postgres
