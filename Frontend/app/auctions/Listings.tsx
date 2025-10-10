@@ -30,7 +30,7 @@ export default function Listings() {
     })))
     const setData = useAuctionStore(state => state.setData);
     const setParams = useParamsStore(state => state.setParams);
-    const url = qs.stringifyUrl({ url: '', query: params });
+    const url = qs.stringifyUrl({ url: '', query: params }, { skipEmptyString: true });
 
     function setPageNumber(pageNumber: number) {
         setParams({ pageNumber })

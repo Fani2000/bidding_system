@@ -5,6 +5,7 @@ import AuthTest from './AuthTest';
 
 export default async function Session() {
     const session = await auth();
+    // console.log("Session: ", session)
     return (
         <div>
             <Heading title='Session dashboard' />

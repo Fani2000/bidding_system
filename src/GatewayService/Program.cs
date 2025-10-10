@@ -26,10 +26,10 @@ builder.Services.AddCors(opts =>
         "customPolicy",
         b =>
         {
-            b.AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials()
-                .WithOrigins(builder.Configuration["ClientApp"]);
+            b
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowAnyOrigin();
         }
     );
 });
@@ -38,9 +38,9 @@ var app = builder.Build();
 
 app.UseCors();
 
+app.MapReverseProxy();
+
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapReverseProxy();
 
 app.Run();

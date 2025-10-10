@@ -90,7 +90,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
-      - IdentityServiceUrl=http://identiy-svc
     depends_on:
       - identiy-svc
       - auction-svc

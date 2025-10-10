@@ -56,6 +56,7 @@ export default function SignalRProvider({ children, user, notifyUrl }: Props) {
     }, [setCurrentPrice, addBid, params.id])
 
     useEffect(() => {
+        console.log("URL: ", notifyUrl)
         if (!connection.current) {
             connection.current = new HubConnectionBuilder()
                 .withUrl(notifyUrl)

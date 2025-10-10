@@ -32,6 +32,8 @@ async function put(url: string, body: {}) {
         body: JSON.stringify(body)
     }
 
+    console.log("Headers: ", await getHeaders())
+
     const response = await fetch(baseUrl + url, requestOptions);
 
     return handleResponse(response);
@@ -50,6 +52,7 @@ async function del(url: string) {
 
 async function getHeaders() {
     const session = await auth();
+    console.log("Session:🗝️🗝️", session?.accessToken)
     const headers = {
         'Content-type': 'application/json'
     } as any;
