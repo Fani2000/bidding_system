@@ -26,10 +26,7 @@ builder.Services.AddCors(opts =>
         "customPolicy",
         b =>
         {
-            b
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowAnyOrigin();
+            b.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
         }
     );
 });

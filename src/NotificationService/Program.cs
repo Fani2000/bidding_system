@@ -5,6 +5,7 @@ using NotificationService.Hubs;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
+builder.Services.AddCors();
 
 // MassTransit + RabbitMQ
 builder.Services.AddMassTransit(x =>
@@ -32,6 +33,8 @@ builder.Services.AddMassTransit(x =>
 });
 
 var app = builder.Build();
+
+app.UseCors();
 
 app.MapHub<NotificationHub>("/notifications"); // SignalR Hub endpoint
 
