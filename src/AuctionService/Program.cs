@@ -92,3 +92,5 @@ catch (System.Exception e)
 }
 
 app.Run();
+
+public partial class Program { }
