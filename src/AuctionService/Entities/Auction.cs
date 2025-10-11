@@ -30,4 +30,6 @@ public class Auction
     public Item Item { get; set; } = null!;
 
     public Guid ItemId { get; set; }
+
+    public bool HasReservePrice() => ReservePrice > 0;
 }
