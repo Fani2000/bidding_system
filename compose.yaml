@@ -60,22 +60,24 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__MongoDbConnection=mongodb://root:mongopw@mongodb:27017
       - RabbitMq__Host=rabbitmq
-      - IdentityServiceUrl=http://identiy-svc
+      - IdentityServiceUrl=http://identity-svc
       - AuctionServiceUrl=http://auction-svc
     depends_on:
       - postgres
       - rabbitmq
-  identiy-svc:
+  identity-svc:
     image: identity-svc:latest
     build:
       context: .
       dockerfile: src/IdentityService/Dockerfile
-    ports:
-      - "5001:80"
+    # ports:
+    #   - "5001:80"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - IssuerUri=http://+:5001
+      - IssuerUri=id.carsties.local
+      - ClientApp=app.carsties.local
+      - VIRTUAL_HOST=id.carsties.local
       - ConnectionStrings__DefaultConnection=server=postgres;port=5432;database=IdentityDb;user id=postgres;password=postgres;
     depends_on:
       - postgres
@@ -85,13 +87,15 @@ services:
     build:
       context: .
       dockerfile: src/GatewayService/Dockerfile
-    ports:
-      - "6001:80"
+    # ports:
+    #   - "6001:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
+      - ClientApp=app.carsties.local
+      - VIRTUAL_HOST=api.carsties.local
     depends_on:
-      - identiy-svc
+      - identity-svc
       - auction-svc
       - search-svc
 
@@ -107,7 +111,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__BidDbConnection=mongodb://root:mongopw@mongodb:27017
       - RabbitMq__Host=rabbitmq
-      - IdentityServiceUrl=http://identiy-svc
+      - IdentityServiceUrl=http://identity-svc
       - AuctionServiceUrl=http://auction-svc
       - GrpcAuction=http://auction-svc:7777
     depends_on:
@@ -127,6 +131,34 @@ services:
       - RabbitMQ__Host=rabbitmq
     depends_on:
       - rabbitmq
+
+  web-app:
+    image: web-app:latest
+    build: 
+      context: .
+      dockerfile: Frontend/Dockerfile
+    volumes:
+      - /var/lib/web/data
+    # ports: 
+    #   - 3000:3000
+    environment:
+      - AUTH_SECRET="4lj/CDAoZoHwXgsr3CjBbc1Je/ggJgWG1t12Viv1smc=" # Added by `npx auth`. Read more: https://cli.authjs.dev
+      - AUTH_URL=app.carsties.local
+      - AUTH_URL_INTERNAL=http://web-app:3000
+      - API_URL=http://api.carsties.local
+      - ID_URL=id.carsties.local
+      - ID_URL_INTERNAL=http://identity-svc
+      - NEXT_PUBLIC_NOTIFY_URL=http://gateway-svc/notifications
+      - VIRTUAL_HOST=app.carsties.local
+      - VIRTUAL_PORT=3000
+
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
 
 volumes:
   pgdata:

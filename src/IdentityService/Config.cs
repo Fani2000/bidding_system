@@ -10,7 +10,7 @@ public static class Config
     public static IEnumerable<ApiScope> ApiScopes =>
         new ApiScope[] { new ApiScope("auctionApp", "Acution app full access") };
 
-    public static IEnumerable<Client> Clients =>
+    public static IEnumerable<Client> Clients(IConfiguration config) =>
         new Client[]
         {
             new Client
@@ -27,7 +27,7 @@ public static class Config
                 ClientId = "nextApp",
                 ClientName = "NextApp",
                 AllowedScopes = { "auctionApp", "openid", "profile" },
-                RedirectUris = { "http://localhost:3000/api/auth/callback/id-server" },
+                RedirectUris = { config["ClientApp"] + "/api/auth/callback/id-server" },
                 AccessTokenLifetime = 3600 * 24 * 30, // 30 days
                 ClientSecrets = new[] { new Secret("secrets".Sha256()) },
                 AllowedGrantTypes = GrantTypes.Code,
