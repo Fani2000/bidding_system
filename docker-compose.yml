@@ -1,3 +1,5 @@
+﻿version: '3.9'
+
 services:
   postgres:
     image: postgres:latest
@@ -26,14 +28,10 @@ services:
       - "15672:15672"
 
   auction-svc:
-    image: auction-svc:latest
-    build:
-      context: .
-      dockerfile: src/AuctionService/Dockerfile
+    image: keorapetse159/auction-svc:latest
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - ASPNETCORE_URLS=http://+:7777
       - RabbitMQ__Host=rabbitmq
       - ConnectionStrings__DefaultConnection=Server=postgres;User Id=postgres;Password=postgres;Database=auctions
       - IdentityServiceUrl=http://identity-svc
@@ -42,17 +40,14 @@ services:
       - Kestrel__Endpoints__WebApi__Protocols=Http1
       - Kestrel__Endpoints__WebApi__Url=http://+:80
     ports:
-      - 7001:80
-      - 7777:7777
+      - "7001:80"
+      - "7777:7777"
     depends_on:
       - postgres
       - rabbitmq
 
   search-svc:
-    image: search-svc:latest
-    build:
-      context: .
-      dockerfile: src/SearchService/Dockerfile
+    image: keorapetse159/search-svc:latest
     ports:
       - "7002:80"
     environment:
@@ -63,47 +58,39 @@ services:
       - IdentityServiceUrl=http://identity-svc
       - AuctionServiceUrl=http://auction-svc
     depends_on:
-      - postgres
+      - mongodb
       - rabbitmq
+
   identity-svc:
-    image: identity-svc:latest
-    build:
-      context: .
-      dockerfile: src/IdentityService/Dockerfile
-    # ports:
-    #   - "5001:80"
+    image: keorapetse159/identity-svc:latest
+    ports: 
+      - "5001:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - IssuerUri=id.carsties.local
-      - ClientApp=app.carsties.local
-      - VIRTUAL_HOST=id.carsties.local
+      - IssuerUri=http://localhost:5001
+      - ClientApp=http://localhost:3000
+      # - VIRTUAL_HOST=localhost:
       - ConnectionStrings__DefaultConnection=server=postgres;port=5432;database=IdentityDb;user id=postgres;password=postgres;
     depends_on:
       - postgres
 
   gateway-svc:
-    image: gateway-svc:latest
-    build:
-      context: .
-      dockerfile: src/GatewayService/Dockerfile
-    # ports:
-    #   - "6001:80"
+    image: keorapetse159/gateway-svc:latest
+    ports:
+      - "6001:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
-      - ClientApp=app.carsties.local
-      - VIRTUAL_HOST=api.carsties.local
+      - ClientApp=http://localhost
+      - VIRTUAL_HOST=localhost
     depends_on:
       - identity-svc
       - auction-svc
       - search-svc
 
   bid-svc:
-    image: bid-svc:latest
-    build:
-      context: .
-      dockerfile: src/BiddingService/Dockerfile
+    image: keorapetse159/bid-svc:latest
     ports:
       - "7003:80"
     environment:
@@ -115,14 +102,11 @@ services:
       - AuctionServiceUrl=http://auction-svc
       - GrpcAuction=http://auction-svc:7777
     depends_on:
-      - postgres
+      - mongodb
       - rabbitmq
 
   notify-svc:
-    image: notify-svc:latest
-    build:
-      context: .
-      dockerfile: src/NotificationService/Dockerfile
+    image: keorapetse159/notify-svc:latest
     ports:
       - "7004:80"
     environment:
@@ -133,23 +117,20 @@ services:
       - rabbitmq
 
   web-app:
-    image: web-app:latest
-    build: 
-      context: .
-      dockerfile: Frontend/Dockerfile
+    image: keorapetse159/web-app:latest
     volumes:
       - /var/lib/web/data
-    # ports: 
-    #   - 3000:3000
+    ports:
+      - "3000:3000"
     environment:
-      - AUTH_SECRET="4lj/CDAoZoHwXgsr3CjBbc1Je/ggJgWG1t12Viv1smc=" # Added by `npx auth`. Read more: https://cli.authjs.dev
-      - AUTH_URL=app.carsties.local
+      - AUTH_SECRET="4lj/CDAoZoHwXgsr3CjBbc1Je/ggJgWG1t12Viv1smc="
+      - AUTH_URL=http://localhost:3000
       - AUTH_URL_INTERNAL=http://web-app:3000
-      - API_URL=http://api.carsties.local
-      - ID_URL=id.carsties.local
+      - API_URL=http://gateway-svc/
+      - ID_URL=http://localhost:5001
       - ID_URL_INTERNAL=http://identity-svc
       - NEXT_PUBLIC_NOTIFY_URL=http://gateway-svc/notifications
-      - VIRTUAL_HOST=app.carsties.local
+      - VIRTUAL_HOST=localhost
       - VIRTUAL_PORT=3000
 
   nginx-proxy:

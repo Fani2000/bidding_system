@@ -25,6 +25,22 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuctionService.UnitTests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuctionService.IntegrationTest", "test\AuctionService.IntegrationTest\AuctionService.IntegrationTest.csproj", "{7187FAE9-5945-462A-BE2D-CB7810FBEC49}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "devops", "devops", "{762A869E-424C-4813-B1EE-23280C272B7F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "k8s", "k8s", "{58D95CAD-BEE9-44CD-A7BB-A0C9C3E6E651}"
+	ProjectSection(SolutionItems) = preProject
+		devops\k8s\auction-depl.yaml = devops\k8s\auction-depl.yaml
+		devops\k8s\bid-depl.yaml = devops\k8s\bid-depl.yaml
+		devops\k8s\search-depl.yaml = devops\k8s\search-depl.yaml
+		devops\k8s\gateway-depl.yaml = devops\k8s\gateway-depl.yaml
+		devops\k8s\local-pvc.yaml = devops\k8s\local-pvc.yaml
+		devops\k8s\mongo-depl.yaml = devops\k8s\mongo-depl.yaml
+		devops\k8s\notify-depl.yaml = devops\k8s\notify-depl.yaml
+		devops\k8s\postgres-depl.yaml = devops\k8s\postgres-depl.yaml
+		devops\k8s\rabbit-depl.yaml = devops\k8s\rabbit-depl.yaml
+		devops\k8s\webapp.yaml = devops\k8s\webapp.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -157,6 +173,7 @@ Global
 		{59CC3332-8E73-4D0C-9A1A-130D748A0927} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{D1FAE1FA-162F-48DA-8582-E2A25AAD2E10} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
 		{7187FAE9-5945-462A-BE2D-CB7810FBEC49} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
+		{58D95CAD-BEE9-44CD-A7BB-A0C9C3E6E651} = {762A869E-424C-4813-B1EE-23280C272B7F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FFCB6158-E8F9-43DD-9668-230F2A8A0EC0}
